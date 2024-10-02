@@ -1,0 +1,30 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Spell {
+  id          Int    @id @default(autoincrement())
+  spell_name  String @map("spell_name") // Renaming field to match the database
+  level       String
+  casting_time String @map("casting_time") // Renaming field to match the database
+  range       String
+  components  String
+  duration    String
+  description String
+  classes     String
+  source_book String @map("source_book") // Renaming field to match the database
+  school      String?
+  tag         String?
+}
+
