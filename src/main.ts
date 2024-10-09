@@ -1,20 +1,20 @@
+// src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Swagger configuration
+  // Swagger setup
   const config = new DocumentBuilder()
-    .setTitle('Spells API') // Title of the API
-    .setDescription('API documentation for managing spells') // Description
-    .setVersion('1.0') // Version
+    .setTitle('Spell API')
+    .setDescription('API documentation for managing spells')
+    .setVersion('1.0')
     .build();
-
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document); // Set up Swagger UI at /api
+  SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000); // Start the application
+  await app.listen(3000);
 }
 bootstrap();

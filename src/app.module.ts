@@ -1,16 +1,9 @@
-import { SpellModule } from './spell/spell.module'; // Import the SpellModule
-
+// src/app.module.ts
 import { Module } from '@nestjs/common';
-import { PrismaService } from 'prisma/prisma.service';
-
+import { SpellModule } from './spells/spell.module';
 import { PrismaModule } from 'prisma/prisma.module';
-import { APP_GUARD } from '@nestjs/core';
 
 @Module({
-  imports: [
-    SpellModule, // Include SpellModule
-    PrismaModule, // Include PrismaModule to ensure its services are available
-  ],
-  // List of providers (services)
+  imports: [SpellModule, PrismaModule], // Register the modules
 })
 export class AppModule {}
