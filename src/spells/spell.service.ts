@@ -1,5 +1,5 @@
 // src/spells/spell.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { GetSpellDto } from './dto/get-spell.dto';
 
@@ -7,31 +7,92 @@ import { GetSpellDto } from './dto/get-spell.dto';
 export class SpellService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(query: any): Promise<{ count: number; spells: GetSpellDto[] }> {
+  async findAll(
+    query: any,
+  ): Promise<{ count: number; spells: GetSpellDto[]; levelCounts: any[] }> {
     const where: any = {};
 
+    // Filter for spell name (case-insensitive)
     if (query.spell_name) {
       where.spell_name = {
         contains: query.spell_name,
         mode: 'insensitive',
       };
     }
+
+    // Handle multiple components (single or array)
+    if (query.components) {
+      if (Array.isArray(query.components)) {
+        where.components = {
+          in: query.components,
+        };
+      } else {
+        where.components = {
+          contains: query.components,
+        };
+      }
+    }
+
+    // Handle multiple tags (single or array)
+    if (query.tags) {
+      if (Array.isArray(query.tags)) {
+        where.tags = {
+          in: query.tags,
+        };
+      } else {
+        where.tags = {
+          contains: query.tags,
+        };
+      }
+    }
+
+    // Handle multiple classes (single or array)
+    if (query.classes) {
+      where.classes = {
+        ...(Array.isArray(query.classes)
+          ? { in: query.classes }
+          : { contains: query.classes }),
+      };
+    }
+
+    // Filter for level
     if (query.level) {
       where.level = +query.level; // Convert level to number
     }
+
+    // Fuzzy search for school (case-insensitive)
     if (query.school) {
-      where.school = { contains: query.school, mode: 'insensitive' }; // Fuzzy search for school
+      where.school = { contains: query.school, mode: 'insensitive' };
     }
+
+    // Filter for ritual (boolean)
     if (query.ritual) {
       where.ritual = query.ritual === 'true';
     }
 
+    // Fetch spells with sorting (level first, then spell name)
     const spells = await this.prisma.spell.findMany({
       where,
+      orderBy: [
+        { level: 'asc' }, // Sort by level in ascending order
+        { spell_name: 'asc' }, // Sort by spell name alphabetically
+      ],
+    });
+
+    // Group by level to get counts of spells for each level
+    const levelCounts = await this.prisma.spell.groupBy({
+      by: ['level'],
+      where: {}, // No additional filtering for count
+      _count: {
+        id: true,
+      },
+      orderBy: {
+        level: 'asc',
+      },
     });
 
     // Convert the Prisma `Spell` object into `GetSpellDto` object
-    const spellDtos = spells.map(spell => ({
+    const spellDtos = spells.map((spell) => ({
       id: spell.id,
       spell_name: spell.spell_name,
       ritual: spell.ritual,
@@ -49,7 +110,39 @@ export class SpellService {
 
     return {
       count: spellDtos.length, // Count of spells returned
+      levelCounts: levelCounts.map((levelCount) => ({
+        level: levelCount.level,
+        count: levelCount._count.id, // Count of spells at this level
+      })),
       spells: spellDtos,
     };
+  }
+
+  // New function for fetching a single spell by id
+  async getSpellById(id: number) {
+    const spell = await this.prisma.spell.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        spell_name: true,
+        level: true,
+        school: true,
+        tags: true,
+        ritual: true,
+        casting_time: true,
+        range: true,
+        components: true,
+        duration: true,
+        description: true,
+        classes: true,
+        source_book: true,
+      },
+    });
+
+    if (!spell) {
+      throw new NotFoundException(`Spell with id ${id} not found`);
+    }
+
+    return spell;
   }
 }
