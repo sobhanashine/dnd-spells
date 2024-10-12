@@ -1,5 +1,5 @@
 // src/spells/spell.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Query } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { GetSpellDto } from './dto/get-spell.dto';
 
@@ -20,9 +20,20 @@ export class SpellService {
 
     // Handle multiple components (single or array)
     if (query.components) {
-      where.components = Array.isArray(query.components)
-        ? { in: query.components }
-        : { contains: query.components };
+      // Create an array of components to check against
+      const exactComponents = ['V', 'S', 'M'];
+
+      if (exactComponents.includes(query.components)) {
+        // Match only spells that have exactly the specified component
+        where.components = {
+          equals: query.components, // This ensures it matches exactly
+          not: { contains: '()' }, // Ensure it doesn't contain a comma
+        };
+        console.log(`Exact match for components: ${where.components}`);
+      } else {
+        // Fallback to partial match for other cases
+        where.components = { contains: query.components };
+      }
     }
 
     // Handle multiple tags (single or array)

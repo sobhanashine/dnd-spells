@@ -37,7 +37,8 @@ export class SpellController {
   @ApiQuery({
     name: 'components',
     required: false,
-    description: 'Filter by components',
+    isArray: false,
+    description: 'List of spell components to filter (S, M, V)',
   })
   @ApiQuery({
     name: 'duration',
