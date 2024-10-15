@@ -115,6 +115,13 @@ export class SpellService {
       where.casting_time = query.casting_time;
     }
 
+    if (query.description) {
+      const des = query.description.split(' ')[0];
+      if (des == 'Unknown') {
+        where.description = query.description;
+      }
+    }
+
     // Fetch spells with sorting (level first, then spell name)
     const spells = await this.prisma.spell.findMany({
       where,
@@ -123,7 +130,9 @@ export class SpellService {
         { spell_name: 'asc' }, // Sort by spell name alphabetically
       ],
     });
-
+    // spells.forEach((spell) => {
+    //   console.log(`${spell.id}`);
+    // });
     // Convert the Prisma `Spell` object into `GetSpellDto` object
     const spellDtos = spells.map((spell) => ({
       id: spell.id,

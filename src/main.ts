@@ -15,6 +15,13 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000,'0.0.0.0');
+  app.enableCors({
+    origin: ['http://localhost:3000', 'https://localhost:3000'], // Allow both HTTP and HTTPS Nuxt.js app
+    credentials: true, // Allow credentials (cookies, etc.), if necessary
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+  });
+
+  await app.listen(3000, '0.0.0.0');
 }
 bootstrap();

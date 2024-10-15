@@ -46,6 +46,11 @@ export class SpellController {
     description: 'Filter by duration',
   })
   @ApiQuery({
+    name: 'description',
+    required: false,
+    description: 'filter by description',
+  })
+  @ApiQuery({
     name: 'classes',
     required: false,
     description: 'Filter by classes',
