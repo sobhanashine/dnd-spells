@@ -13,7 +13,6 @@ export class SpellService {
     query: GetSpellDto,
   ): Promise<{ count: number; spells: GetSpellDto[] }> {
     const where: any = {};
-
     // Filter for spell name (case-insensitive)
     if (query.spell_name) {
       where.spell_name = {
@@ -77,7 +76,6 @@ export class SpellService {
     // Handle multiple tags (single or array)
     if (query.tags) {
       const we = query.tags.split(' ');
-      console.log(we);
       where.tags = Array.isArray(query.tags)
         ? { in: query.tags }
         : { contains: query.tags };
@@ -105,9 +103,9 @@ export class SpellService {
       where.school = { contains: query.school, mode: 'insensitive' };
     }
 
-    // Filter for ritual (boolean)
-    if (query.ritual) {
-      where.ritual = query.ritual = true;
+    // Handle ritual filter
+    if (query.ritual !== undefined) {
+      where.ritual = query.ritual === 'true'; // Convert 'true'/'false' to boolean
     }
 
     // filter for casting_time
@@ -134,28 +132,29 @@ export class SpellService {
     //   console.log(`${spell.id}`);
     // });
     // Convert the Prisma `Spell` object into `GetSpellDto` object
-    const spellDtos = spells.map((spell) => ({
-      id: spell.id,
-      spell_name: spell.spell_name,
-      ritual: spell.ritual,
-      school: spell.school,
-      tags: spell.tags,
-      level: spell.level,
-      casting_time: spell.casting_time,
-      range: spell.range,
-      components: spell.components,
-      duration: spell.duration,
-      description: spell.description,
-      classes: spell.classes,
-      source_book: spell.source_book,
-    }));
+    const spellDtos: GetSpellDto[] = spells.map((spell) => {
+      const dto = new GetSpellDto(); // Create a new instance of GetSpellDto
+      dto.id = spell.id;
+      dto.spell_name = spell.spell_name;
+      dto.ritual = spell.ritual ? 'true' : 'false'; // Convert to string
+      dto.school = spell.school;
+      dto.tags = spell.tags;
+      dto.level = spell.level;
+      dto.casting_time = spell.casting_time;
+      dto.range = spell.range;
+      dto.components = spell.components;
+      dto.duration = spell.duration;
+      dto.description = spell.description;
+      dto.classes = spell.classes;
+      dto.source_book = spell.source_book;
+      return dto;
+    });
 
     return {
       count: spellDtos.length, // Count of spells returned
       spells: spellDtos,
     };
   }
-
   // New function for fetching a single spell by id
   async getSpellById(id: number) {
     const spell = await this.prisma.spell.findUnique({
